@@ -1,13 +1,13 @@
+import os
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 import httpx
-import os
 
 app = FastAPI()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8644154655:AAFv3PZV6JYuNKBUp0WYYyLydCT-Q2zAAfc")
-GROUP_CHAT_ID = int(os.getenv("GROUP_CHAT_ID", "-1003955690487"))
-INTERNAL_WEBHOOK_SECRET = os.getenv("INTERNAL_WEBHOOK_SECRET", "super-secret-key")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GROUP_CHAT_ID = int(os.getenv("GROUP_CHAT_ID"))
+INTERNAL_WEBHOOK_SECRET = os.getenv("INTERNAL_WEBHOOK_SECRET")
 
 TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -18,10 +18,7 @@ class CheckUserRequest(BaseModel):
 
 async def get_chat_member(chat_id: int, user_id: int) -> dict:
     url = f"{TELEGRAM_API}/getChatMember"
-    payload = {
-        "chat_id": chat_id,
-        "user_id": user_id
-    }
+    payload = {"chat_id": chat_id, "user_id": user_id}
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         response = await client.post(url, json=payload)
@@ -36,9 +33,9 @@ async def get_chat_member(chat_id: int, user_id: int) -> dict:
     return data["result"]
 
 
-def is_allowed_status(status: str) -> bool:
-    # Участником считаем обычного участника, админа и владельца
-    return status in {"member", "administrator", "creator"}
+@app.get("/")
+async def root():
+    return {"status": "running", "group_chat_id": GROUP_CHAT_ID}
 
 
 @app.post("/check-user")
@@ -49,21 +46,13 @@ async def check_user(
     if x_webhook_secret != INTERNAL_WEBHOOK_SECRET:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    try:
-        member = await get_chat_member(GROUP_CHAT_ID, body.user_id)
-        status = member.get("status", "unknown")
+    member = await get_chat_member(GROUP_CHAT_ID, body.user_id)
+    status = member.get("status", "unknown")
 
-        return {
-            "ok": True,
-            "user_id": body.user_id,
-            "in_group": status in {"member", "administrator", "creator"},
-            "status": status
-        }
-
-    except Exception as e:
-        return {
-            "ok": False,
-            "user_id": body.user_id,
-            "in_group": False,
-            "error": str(e)
-        }
+    return {
+        "ok": True,
+        "user_id": body.user_id,
+        "group_chat_id": GROUP_CHAT_ID,
+        "in_group": status in {"member", "administrator", "creator"},
+        "status": status
+    }

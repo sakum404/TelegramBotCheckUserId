@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  bot:
+    image: telegram-check-bot:latest
+    container_name: telegram-bot
+    ports:
+      - "8000:8000"
+    environment:
+      BOT_TOKEN: "${BOT_TOKEN}"
+      GROUP_CHAT_ID: "${GROUP_CHAT_ID}"
+      INTERNAL_WEBHOOK_SECRET: "${INTERNAL_WEBHOOK_SECRET}"
+    restart: always

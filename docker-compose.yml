@@ -1,9 +1,9 @@
-version: "3.9"
+ version: "3.9"
 
 services:
   bot:
-    image: telegram-check-bot:latest
-    container_name: telegram-bot
+    build: .
+    container_name: telegram-bot-hr
     ports:
       - "8000:8000"
     environment:

@@ -5,7 +5,7 @@ services:
     build: .
     container_name: telegram-bot-hr
     ports:
-      - "8000:8000"
+      - "7000:7000"
     environment:
       BOT_TOKEN: "${BOT_TOKEN}"
       GROUP_CHAT_ID: "${GROUP_CHAT_ID}"
